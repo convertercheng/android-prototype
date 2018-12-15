@@ -17,7 +17,7 @@ import java.util.List;
 public class bgAdapter extends RecyclerView.Adapter<bgAdapter.ViewHolder> {
 
     private Context mContext;
-    private List<bgSet> mbgList;
+    private List<imageUriSet> mbgList;
     private OnItemClickListener mItemClickListener;
 
 
@@ -32,7 +32,7 @@ public class bgAdapter extends RecyclerView.Adapter<bgAdapter.ViewHolder> {
         }
     }
 
-    public bgAdapter(List<bgSet> bgList){
+    public bgAdapter(List<imageUriSet> bgList){
         mbgList = bgList;
     }
 
@@ -58,12 +58,12 @@ public class bgAdapter extends RecyclerView.Adapter<bgAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(bgAdapter.ViewHolder holder, final int position) {
-        bgSet mybg = mbgList.get(position);
-        holder.bgImage.setImageResource(mybg.getId());
+        imageUriSet mBg = mbgList.get(position);
+        holder.bgImage.setImageURI(mBg.getImageUri());
 
         holder.itemView.setOnClickListener(new View.OnClickListener(){   //item点击事件
             @Override
-            public void onClick(View v) {
+            public void onClick(View v) {          //背景点击事件
                 if(mItemClickListener!=null){
                     mItemClickListener.onClick(position);
                 }

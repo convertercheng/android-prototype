@@ -263,9 +263,9 @@ public class Sketch {
                 baseColor[i] = 0xff0000ff;
             }*/
             //改透明色
-            if(baseColor[i] == 0xff000000){
+/*            if(baseColor[i] == 0xff000000){
                 baseColor[i] = 0x00000000;
-            }
+            }*/
             //这个basecolor的数值我没有改
             // nb左移16位？，和nb左移8位和nb和0xff000000不透明？并集？
             //“颜色减淡”模式的公式是：基色+（基色*混合色）/（255-混合色）=结果色

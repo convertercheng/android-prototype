@@ -1,12 +1,17 @@
 package com.example.ourapplication;
 
 import android.app.ProgressDialog;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -15,6 +20,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -27,6 +33,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.upload.NetworkTask;
 //<<<<<<< Updated upstream
 //=======
 import com.tencent.mm.opensdk.modelmsg.SendMessageToWX;
@@ -38,18 +45,17 @@ import com.tencent.mm.opensdk.openapi.WXAPIFactory;
 
 //>>>>>>> Stashed changes
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.example.ourapplication.Weixin;
-
-public class Activity_camera extends AppCompatActivity {
+public class Activity_camera extends AppCompatActivity implements View.OnTouchListener{
 //>>>>>>> Stashed changes
 
     //*************************************************
-    private List<bgSet> bgList= new ArrayList<>();
+    private List<imageUriSet> mBgList= new ArrayList<>();
     private Toolbar toolbar;
-    private bgAdapter myBgAdapter;
+    private bgAdapter mBgAdapter;
     private Button reChooseButton;
     private Button transformButton;
     private Button bgButton;
@@ -73,26 +79,27 @@ public class Activity_camera extends AppCompatActivity {
     /////////////////////////////////////////////// //\\//
 
     private ImageView picture;
-    private Uri imageUri;
     private File clipFile;
+    private String clipImagePath;
     //设置素描的常量请求
 
     private Bitmap mSourceBitmap;
     private Bitmap mConvertedBitmap;
+    private Bitmap backgroudBitmap;
     Uri clipPhotoUri;
+    imageUriSet bgChoosed;
 
-    private static final int radius = 10;
+    private static final int radius = 30;//这个效果比较好，但是延迟较高
     private static final int TYPE_CONVERT = 3;
     private ProgressDialog mDialog;
     private static final int ThUMB_SIZE = 150;
     private String APP_ID ="wx93285cfd2b026fc0";
     private IWXAPI wxApi = WXAPIFactory.createWXAPI(Activity_camera.this,APP_ID); //
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
-
-
 
 
         //******************************布局设置***************************************************
@@ -112,18 +119,19 @@ public class Activity_camera extends AppCompatActivity {
         layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
         bgRecView.setLayoutManager(layoutManager);
 
-        myBgAdapter = new bgAdapter(bgList);
-        bgRecView.setAdapter(myBgAdapter);
+        mBgAdapter = new bgAdapter(mBgList);
+        bgRecView.setAdapter(mBgAdapter);
         bgRecView.setVisibility(View.INVISIBLE);
-        myBgAdapter.setOnItemClickListener(new bgAdapter.OnItemClickListener() {
+        mBgAdapter.setOnItemClickListener(new bgAdapter.OnItemClickListener() {
             @Override
             public void onClick(int position) {          //背景图片点击事件
                 //Toast.makeText(Activity_camera.this, position+" "+layoutManager.getItemCount(),Toast.LENGTH_SHORT).show();
                 //View view = layoutManager.findViewByPosition(position);
                 //Toast.makeText(Activity_camera.this,backgroundChoosed.getName(), Toast.LENGTH_SHORT).show();
-                bgSet bgchoosed = bgList.get(position);
+                bgChoosed = mBgList.get(position);
                 TextView text_bg = (TextView)findViewById(R.id.text_bg);
-                text_bg.setText(bgchoosed.getName());
+                text_bg.setText(bgChoosed.getImageParam());
+                //picture.setImageResource(bgchoosed.getImageId());
 
             }
         });
@@ -165,13 +173,46 @@ public class Activity_camera extends AppCompatActivity {
         yesButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
+
+                Log.i("Activity_camera",bgChoosed.getImageUri().toString());
+//                backgroudBitmap = BitmapFactory.decodeFile(PhotoClipperUtil.getPath(Activity_camera.
+//                                this,bgChoosed.getImageUri()));
+                try {
+                    backgroudBitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(
+                            bgChoosed.getImageUri()
+                    ));
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+                Log.i("Activity_camera",bgChoosed.getImageUri().toString());
+                Bitmap bitmap = Bitmap.createBitmap(500,500, Bitmap.Config.ARGB_4444);
+                Canvas canvas = new Canvas(bitmap);
+                float finalWidth = 500;
+                float finalHeight = 500;
+                Matrix matrix = new Matrix();
+                matrix.setScale(finalWidth / backgroudBitmap.getWidth(),
+                        finalHeight / backgroudBitmap.getHeight());
+                Paint paint = new Paint();
+                canvas.drawBitmap(backgroudBitmap.copy(Bitmap.Config.ARGB_4444,true)
+                        ,matrix,paint);
+
+                Paint paint1 = new Paint();
+                paint1.setAlpha(205);
+                matrix.setScale(finalWidth / mConvertedBitmap.getWidth(),
+                        finalHeight / mConvertedBitmap.getHeight());
+                canvas.drawBitmap(mConvertedBitmap.copy(Bitmap.Config.ARGB_4444,true)
+                        ,matrix,paint1);
+
                 bgRecView.setVisibility(View.INVISIBLE);
                 bgshowControl.setVisibility(View.INVISIBLE);
+
+//                picture.setImageBitmap(backgroudBitmap);
+                picture.setImageBitmap(bitmap);
                 Toast.makeText(Activity_camera.this, "背景选择成功", Toast.LENGTH_SHORT).show();
+
 
             }
         });
-
 
         noButton = (Button)findViewById(R.id.nobut);    //背景选取关闭
         noButton.setOnClickListener(new View.OnClickListener(){
@@ -182,54 +223,29 @@ public class Activity_camera extends AppCompatActivity {
             }
         });
 
-//        Button camera_next = (Button)findViewById(R.id.camera_next);
-//        camera_next.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Intent cemera_next = new Intent(Activity_camera.this,ResultActivity.class);
-//                startActivity(cemera_next);
-//                finish();
-//            }
-//        });
-        //*********************************************************************************
 
+        //*********************************************************************************
         clipPhotoUri = Uri.parse(getIntent().getStringExtra("photoUri"));
 
-        clipFile = getFileStreamPath(PhotoClipperUtil.getPath(this,clipPhotoUri));
         picture = (ImageView) findViewById(R.id.picture);
         //find the ImageView
-        //在创建的时候就可以把bitmap数据取出来放到ImageView上面
-        Bitmap bitmap;
-        bitmap = BitmapFactory.decodeFile(PhotoClipperUtil.getPath(this,clipPhotoUri));
+//        clipImagePath = PhotoClipperUtil.getPath(getApplicationContext()
+//                ,clipPhotoUri);
+        Log.i("camera","11" + clipPhotoUri.toString());
+//        clipImagePath = PhotoClipperUtil.getPath(getApplicationContext(),clipPhotoUri);
+        Log.i("camera","22" + clipImagePath);
+        clipImagePath = MainActivity.imagePath;
+        clipFile = new File(clipImagePath);
+        Bitmap bitmap = BitmapFactory.decodeFile(clipImagePath);
         //这里用的游标找到的，说明在sqlite里面有记录，注意
         picture.setImageBitmap(bitmap);
-
+        picture.setOnTouchListener(this);
     }
 
-
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-/*            case Take_photo:
-//              if the intent is take_photo
-                if (resultCode == RESULT_OK) {
-//              if the resultCode is ok then
-                    try {
-                        Toast.makeText(MyApplication.getContext(), "保存成功", Toast.LENGTH_SHORT).show();
-                        Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().
-                                openInputStream(imageUri));
-                        picture.setImageBitmap(bitmap);
-                        //显示保存成功，而且用BitmapFactory解析imageUri，也就是意图里面的imageUri
-                        //外界的程序可以通过getContentResolver()访问，这里暴露了接口，要和getContentProvider里面的接口相对应
-                        //从imageUri取出数据流，用BitmapFactory转换成bitmap，然后放在视图picture里面
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                }
-                break;
-            default:
-                break;*/
-        }
+    private void uploadImage(String imagePath) {
+        new NetworkTask().execute(imagePath);
     }
+
 
     private class ConvertTask extends AsyncTask<Integer, Void, Bitmap> {
         @Override
@@ -274,15 +290,6 @@ public class Activity_camera extends AppCompatActivity {
         }
 
     }
-/*    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (mTransformedBitmap != null) ;
-        mTransformedBitmap.recycle();
-        mTransformedBitmap = null;
-        //如果转换的 Bitmap还占用内存，清空
-    }*/
-
 
 //***********************************************************************************************
 
@@ -300,11 +307,16 @@ public class Activity_camera extends AppCompatActivity {
                 break;
 
             case R.id.save:           //保存图片
+                BitmapDrawable drawable = (BitmapDrawable)picture.getDrawable();
+                Bitmap bitmap = drawable.getBitmap();
+
+                PhotoClipperUtil.saveMyBitmap(getApplicationContext(),clipFile,bitmap);
+                uploadImage(clipImagePath);
+
                 mSaveWindow = new saveWindow(Activity_camera.this, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
 
-                        PhotoClipperUtil.saveMyBitmap(clipFile,mConvertedBitmap);
                         Toast.makeText(Activity_camera.this, "朋友圈", Toast.LENGTH_SHORT).show();
                         Weixin.WeiXinRegister(Activity_camera.this);
                         Weixin.image_share(mConvertedBitmap, 0,Activity_camera.this);
@@ -342,24 +354,35 @@ public class Activity_camera extends AppCompatActivity {
     }
 
     private void initBackground() {                             //初始化背景图片
-        bgSet bg1 = new bgSet("bg1", R.drawable.bg1);
-        bgList.add(bg1);
-        bgSet bg2 = new bgSet("bg2", R.drawable.bg2);
-        bgList.add(bg2);
-        bgSet bg3 = new bgSet("bg3", R.drawable.bg3);
-        bgList.add(bg3);
-        bgSet bg4 = new bgSet("bg4", R.drawable.bg4);
-        bgList.add(bg4);
-        bgSet bg5 = new bgSet("bg5", R.drawable.bg5);
-        bgList.add(bg5);
-        bgSet bg6 = new bgSet("bg6", R.drawable.bg6);
-        bgList.add(bg6);
-        bgSet bg7 = new bgSet("bg7", R.drawable.bg7);
-        bgList.add(bg7);
-        bgSet bg8 = new bgSet("bg8", R.drawable.bg8);
-        bgList.add(bg8);
-        bgSet bg9 = new bgSet("bg9", R.drawable.bg9);
-        bgList.add(bg9);
+
+        mBgList.clear();
+        imageUriSet bg1 = new imageUriSet(getUriFromDrawableRes(R.drawable.bg1));
+        bg1.setImageParam("bg1");
+        mBgList.add(bg1);
+        imageUriSet bg2 = new imageUriSet(getUriFromDrawableRes(R.drawable.bg2));
+        bg2.setImageParam("bg2");
+        mBgList.add(bg2);
+        imageUriSet bg3 = new imageUriSet(getUriFromDrawableRes(R.drawable.bg3));
+        bg3.setImageParam("bg3");
+        mBgList.add(bg3);
+        imageUriSet bg4 = new imageUriSet(getUriFromDrawableRes(R.drawable.bg4));
+        bg4.setImageParam("bg4");
+        mBgList.add(bg4);
+        imageUriSet bg5 = new imageUriSet(getUriFromDrawableRes(R.drawable.bg5));
+        bg5.setImageParam("bg5");
+        mBgList.add(bg5);
+        imageUriSet bg6 = new imageUriSet(getUriFromDrawableRes(R.drawable.bg6));
+        bg6.setImageParam("bg6");
+        mBgList.add(bg6);
+        imageUriSet bg7 = new imageUriSet(getUriFromDrawableRes(R.drawable.bg7));
+        bg7.setImageParam("bg7");
+        mBgList.add(bg7);
+        imageUriSet bg8 = new imageUriSet(getUriFromDrawableRes(R.drawable.bg8));
+        bg8.setImageParam("bg8");
+        mBgList.add(bg8);
+        imageUriSet bg9 = new imageUriSet(getUriFromDrawableRes(R.drawable.bg9));
+        bg9.setImageParam("bg9");
+        mBgList.add(bg9);
     }
     
     /////////////////////////////////////////////// //\\//
@@ -422,5 +445,16 @@ public class Activity_camera extends AppCompatActivity {
         return true;
     }
 
-    /////////////////////////////////////////////// //\\//
+// <<<<<<< master
+    public Uri getUriFromDrawableRes(int id) {
+        Resources resources = (Resources)getBaseContext().getResources();
+        String path = ContentResolver.SCHEME_ANDROID_RESOURCE + "://"
+                + resources.getResourcePackageName(id) + "/"
+                + resources.getResourceTypeName(id) + "/"
+                + resources.getResourceEntryName(id);
+        return Uri.parse(path);
+    }
 }
+// =======
+    /////////////////////////////////////////////// //\\//
+// >>>>>>> master

@@ -1,0 +1,140 @@
+
+fname:d:\workspace\originals-android\loginactivity.java
+line count::126
+total count:126
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\android\arch\lifecycle\r.java
+line count::10
+total count:136
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\android\support\compat\r.java
+line count::140
+total count:276
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\android\support\constraint\r.java
+line count::237
+total count:513
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\android\support\coreui\r.java
+line count::140
+total count:653
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\android\support\coreutils\r.java
+line count::140
+total count:793
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\android\support\design\r.java
+line count::1957
+total count:2750
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\android\support\fragment\r.java
+line count::140
+total count:2890
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\android\support\graphics\drawable\r.java
+line count::140
+total count:3030
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\android\support\graphics\drawable\animated\r.java
+line count::140
+total count:3170
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\android\support\mediacompat\r.java
+line count::163
+total count:3333
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\android\support\transition\r.java
+line count::173
+total count:3506
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\android\support\v4\r.java
+line count::163
+total count:3669
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\android\support\v7\appcompat\r.java
+line count::1552
+total count:5221
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\android\support\v7\cardview\r.java
+line count::61
+total count:5282
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\android\support\v7\recyclerview\r.java
+line count::168
+total count:5450
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\com\example\ourapplication\r.java
+line count::15243
+total count:20693
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\not_namespaced_r_class_sources\debug\processdebugresources\r\de\hdodenhof\circleimageview\r.java
+line count::25
+total count:20718
+fname:d:\workspace\originals-android\ourapplication\app\build\generated\source\buildconfig\debug\com\example\ourapplication\buildconfig.java
+line count::12
+total count:20730
+fname:d:\workspace\originals-android\ourapplication\app\src\androidtest\java\com\example\ourapplication\exampleinstrumentedtest.java
+line count::20
+total count:20750
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\download\netservice.java
+line count::21
+total count:20771
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\download\netservicetask.java
+line count::46
+total count:20817
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\download\urlposthandler.java
+line count::5
+total count:20822
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\activity_camera.java
+line count::357
+total count:21179
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\bgadapter.java
+line count::59
+total count:21238
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\hisadapter.java
+line count::61
+total count:21299
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\historyactivity.java
+line count::94
+total count:21393
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\imageuriset.java
+line count::26
+total count:21419
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\loginactivity.java
+line count::130
+total count:21549
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\mainactivity.java
+line count::404
+total count:21953
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\myapplication.java
+line count::17
+total count:21970
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\photoclipperutil.java
+line count::237
+total count:22207
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\popwindow.java
+line count::59
+total count:22266
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\recmdadapter.java
+line count::174
+total count:22440
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\registeractivity.java
+line count::103
+total count:22543
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\resultactivity.java
+line count::90
+total count:22633
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\savewindow.java
+line count::59
+total count:22692
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\sketch.java
+line count::213
+total count:22905
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\sqlite.java
+line count::27
+total count:22932
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\streamtools.java
+line count::23
+total count:22955
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\testsketch.java
+line count::16
+total count:22971
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\ourapplication\weixin.java
+line count::52
+total count:23023
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\upload\constant.java
+line count::5
+total count:23028
+fname:d:\workspace\originals-android\ourapplication\app\src\main\java\com\example\upload\networktask.java
+line count::55
+total count:23083
+fname:d:\workspace\originals-android\ourapplication\app\src\test\java\com\example\ourapplication\exampleunittest.java
+line count::14
+total count:23097
+
+--------------------------------------
+total file count:45
+total line count:23097

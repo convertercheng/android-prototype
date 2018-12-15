@@ -1,5 +1,8 @@
 package com.example.ourapplication;
 
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Environment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -8,24 +11,33 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.PopupWindow;
+import android.util.Log;
 import android.widget.Toast;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class HistoryActivity extends AppCompatActivity {
 
-    private List<picSet> myHisList= new ArrayList<>();           //系统推荐&历史记录
+    private static final String TAG = "HistoryAcctivity";
+    private List<imageUriSet> mHisList= new ArrayList<>();           //历史记录
+    private Uri tempuri;
+    private Toolbar history_show_toolbar;       //toolbar
+    private hisAdapter historyAdapter;
+    private RecyclerView hisView;
 
+    public static final String CLIP_ICON_DIC = Environment
+            .getExternalStorageDirectory()
+            + File.separator + "clipIcon";//存在sd卡上的headIcon里面
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
 
-        Toolbar history_show_toolbar = (Toolbar)findViewById(R.id.toolbar_history);
+        //*************************************布局设置*************************************
+        history_show_toolbar = (Toolbar)findViewById(R.id.toolbar_history);
         setSupportActionBar(history_show_toolbar);
 
         ActionBar picActBar = getSupportActionBar();
@@ -35,48 +47,56 @@ public class HistoryActivity extends AppCompatActivity {
             picActBar.setTitle("历史记录");
         }
 
-        initHistoryShow();
-        RecyclerView hisView = (RecyclerView)findViewById(R.id.historyshow);
+        //*************************************************************************************
+
+        initHisList();
+        hisView = (RecyclerView)findViewById(R.id.hisImage);
         GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
         hisView.setLayoutManager(layoutManager);
 
-        picViewAdapter hisAdapter = new picViewAdapter(myHisList);
-        hisView.setAdapter(hisAdapter);
+        historyAdapter = new hisAdapter(mHisList);
+        hisView.setAdapter(historyAdapter);
 
+        historyAdapter.setOnItemClickListener(new hisAdapter.OnItemClickListener() {
+            @Override
+            public void onClick(int position) {
+                imageUriSet hisChoosed = mHisList.get(position);
+                Uri hisUri = hisChoosed.getImageUri();
+                Toast.makeText(HistoryActivity.this,"请求成功，转向转换界面", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(HistoryActivity.this,Activity_camera.class);
+                intent.putExtra("photoUri",hisUri.toString());
+                startActivity(intent);
+                finish();
+            }
+        });
 
     }
 
-    private void initHistoryShow() {
+    private void initHisList() {
 
+        mHisList.clear();
         //获取历史记录
+        File path = new File(CLIP_ICON_DIC);
+        File[] files = path.listFiles();          // 读取文件夹下文件
 
-        if(myHisList==null){              //历史记录为空，获取几张推荐图片显示在首页
-
+        if(files!=null){             //判断文件组是否为空
+            for(File file : files){
+                if(file.isDirectory()){   //判断是否为文件夹
+                    Log.i(TAG,"目录下含有文件夹");
+                }
+                else{
+                    String fileName = file.getName();
+//                    if(fileName.endsWith(".png")&&file.length()!=0){            //如果是图片
+//                        tempuri = PhotoClipperUtil.getUriFromFile(this,file);
+                    if(fileName.startsWith("history")&&file.length()!=0){
+                        tempuri = PhotoClipperUtil.getImageContentUri(this,file);
+                        imageUriSet hisUri = new imageUriSet(tempuri);
+                        hisUri.setImagePath(CLIP_ICON_DIC + File.separator + fileName);   //设置图片路径
+                        mHisList.add(hisUri);
+                    }
+                }
+            }
         }
-        picSet recommend1 = new picSet(R.drawable.u16,"系统推荐");
-        myHisList.add(recommend1);
-
-        picSet recommend2 = new picSet(R.drawable.u17,"系统推荐");
-        myHisList.add(recommend2);
-
-        picSet recommend3 = new picSet(R.drawable.u18,"系统推荐");
-        myHisList.add(recommend3);
-
-        picSet recommend4 = new picSet(R.drawable.u2,"系统推荐");
-        myHisList.add(recommend4);
-
-        picSet recommend5 = new picSet(R.drawable.u1,"系统推荐");
-        myHisList.add(recommend5);
-
-        picSet recommend6 = new picSet(R.drawable.u3,"系统推荐");
-        myHisList.add(recommend6);
-
-        picSet recommend7 = new picSet(R.drawable.u5,"系统推荐");
-        myHisList.add(recommend7);
-
-        picSet recommend8 = new picSet(R.drawable.u4,"系统推荐");
-        myHisList.add(recommend8);
-
     }
 
     @Override

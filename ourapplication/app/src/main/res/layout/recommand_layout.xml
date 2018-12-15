@@ -13,13 +13,13 @@
         android:layout_height="wrap_content">
 
         <ImageView
-            android:id="@+id/imageuri"
+            android:id="@+id/recmdImage"
             android:layout_width="match_parent"
             android:layout_height="180dp"
             android:scaleType="centerCrop"/>
 
         <TextView
-            android:id="@+id/imagedate"
+            android:id="@+id/recmdParam"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"/>

@@ -1,6 +1,7 @@
 package com.example.ourapplication;
 
 import android.Manifest;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -30,8 +31,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,35 +44,24 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static com.example.ourapplication.PhotoClipperUtil.getImageContentUri;
 
 public class MainActivity extends AppCompatActivity {
 
     //******************************************************************************
+
     private popWindow myPopWindow;
     private DrawerLayout mainDrawerLayout;
-    private List<picSet> mRecommandList= new ArrayList<>();           //系统推荐&历史记录
+    private List<imageUriSet> mRecmdList= new ArrayList<>();           //系统推荐&历史记录
     private TextView hintText;
     //******************************************************************************
-    private Context mContext;
 
-    public Context getmContext() {
-        return getApplicationContext();
-    }
-
-    public static final String HEAD_ICON_DIC = Environment
-            .getExternalStorageDirectory()
-            + File.separator + "headIcon";//存在sd卡上的headIcon里面
     public static final String CLIP_ICON_DIC = Environment
             .getExternalStorageDirectory()
             + File.separator + "clipIcon";//存在sd卡上的headIcon里面
 
-    private File headIconFile = null;// 相册或者拍照保存的文件
     private File headClipFile = null;// 裁剪后的头像
-    private String headFileNameStr = "headIcon.jpg";//初始化这两个图片,实际不是这两个文件名称
-    private String clipFileNameStr = "clipIcon.jpg";
     protected final String TAG = getClass().getSimpleName();
-    private Uri pictureUri;//这个是照片的Uri，实际上就是headIconFile的Uri
+    private Uri pictureUri;//这个是照片的Uri，实际上就是clipIconFile的Uri
 
     //权限相关
 
@@ -84,22 +72,20 @@ public class MainActivity extends AppCompatActivity {
     private final String IMAGE_TYPE = "image/*";
 
     public static final int REQUEST_STORAGE = 103;
-    
-    private byte[] result;
-    Uri imageUri;
-    ImageView headImg;
-    Bitmap bitmap = null;
+
     private Uri outPutUri;
-    private TextView username;
-    private String name;
+    public String filePath;
+//    public static String filePath;
+    public static String imagePath;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Intent intent=getIntent();
-        name=intent.getStringExtra("用户名");
-//        username =(TextView) findViewById(R.id.username);
-//        username.setText("welcome "+name+" to the camera app!!!");
+//<<<<<<< master
+        String name=intent.getStringExtra("用户名");
+
+//>>>>>>> master
 
         //***************************布局设置****************************************
         Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar_mainwindow);
@@ -126,30 +112,28 @@ public class MainActivity extends AppCompatActivity {
                     case R.id.history_icon:            //选择查看历史背景
                         mainDrawerLayout.closeDrawers();
 
-//                        String address = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1490783056273&di=6160d101d31dcf5f44b443ad9c5b2648&imgtype=0&src=http%3A%2F%2Fimg.sc115.com%2Fuploads%2Fallimg%2F110626%2F2011062622383898.jpg";
-                        String[] addresses = new String[]{
-                                "http://www.vayhee.cn/eplatform/img/ad.jpg"
-
-                        };
-                        String address = null;
-                        for(int i =0 ;i < addresses.length ;i++){
-                            address = addresses[i];
-                            NetServiceTask netServerTask = new NetServiceTask(address, new URLPostHandler() {
+                        String subPath = LoginActivity.userName + File.separator;
+                        for(int i = 0 ;i < 6; i++){
+                            final int tmp = i+1;
+                            String url = "http://www.vayhee.cn/infomanage/DownloadServlet?filename="
+                                    + subPath + tmp + ".png";
+                            NetServiceTask netServerTask = new NetServiceTask(url, new URLPostHandler() {
                                 @Override
                                 public void PostHandler(Bitmap bitmap) {
-                                    File file = new File(CLIP_ICON_DIC,getTempFile().getName());
-                                    try {
-                                        PhotoClipperUtil.saveFile(getmContext(),bitmap,file);
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
+                                    File file = new File(CLIP_ICON_DIC,"history" + tmp + ".png");
+                                    if(!file.exists()){
+                                        try {
+                                            file.createNewFile();
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
                                     }
-                                    Toast.makeText(MainActivity.this,"dsfd",Toast.LENGTH_SHORT).show();
-
+                                    PhotoClipperUtil.saveMyBitmap(getApplicationContext(),file,bitmap);
                                 }
                             });
                             Thread thread = new Thread(netServerTask);
-                            thread.start();
-                        }//载入历史图片,保存到CLIP_ICON_DIC文件夹
+                            thread.start();//从后台下载图片，然后显示
+                        }
                         Intent history_show = new Intent(MainActivity.this,HistoryActivity.class);
                         startActivity(history_show);
                         break;
@@ -167,11 +151,11 @@ public class MainActivity extends AppCompatActivity {
         GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
         recommandView.setLayoutManager(layoutManager);
 
-        picViewAdapter recommandAdapter = new picViewAdapter(mRecommandList);                      //picViewAdapter.java
-        recommandView.setAdapter(recommandAdapter);
+        recmdAdapter recmdAdapter = new recmdAdapter(this,recommandView,mRecmdList);                      //recmdAdapter.java
+        recommandView.setAdapter(recmdAdapter);
 
 
-        createFile();
+
 
         hintText = (TextView)findViewById(R.id.hint);
 
@@ -205,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         //权限申请，相册
+                        createFile();       //创建文件夹存放图片
                         if (ContextCompat.checkSelfPermission(MainActivity.this,
                                 Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
                                 PackageManager.PERMISSION_GRANTED) {
@@ -238,10 +223,6 @@ public class MainActivity extends AppCompatActivity {
                 hintText.setVisibility(View.INVISIBLE);
             }
         });
-
-//        Button photo = (Button)findViewById(R.id.Photo_main);
-//        Button picture = (Button)findViewById(R.id.Picture_main);
-
     }
 
 
@@ -310,12 +291,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
+        Log.i(TAG,"requestcode" + requestCode);
         switch (requestCode) {
             case CLIP_PHOTO_BIG_REQUEST_CODE:
+                Log.i(TAG,"resultcode" + resultCode);
                 if (resultCode == RESULT_OK) {
+                    Log.i(TAG,"adfddf" + outPutUri.toString());
                     Toast.makeText(this,"请求成功，转向转换界面", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(MainActivity.this,Activity_camera.class);
-//                    intent.putExtra("bitmap",result);
                     intent.putExtra("photoUri",outPutUri.toString());
                     startActivity(intent);
                     //这个时候bitmap里面应该存着图片了，直接传入就可以接收。
@@ -323,7 +306,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this,"请求拒绝", Toast.LENGTH_SHORT).show();
                 }
                 break;
-            case REQUEST_IMAGE_CAPTURE:
+            case REQUEST_IMAGE_CAPTURE:            //拍照
                 if (resultCode == RESULT_OK) {
                     //拍照后返回,调用系统裁剪
                     //Uri.fromFile()得到file://，而getUriFromFile()得到content开头的
@@ -331,21 +314,28 @@ public class MainActivity extends AppCompatActivity {
                     //安卓无法识别file://开头的uri
                 }
                 break;
-            case REQUEST_IMAGE_GET:
+            case REQUEST_IMAGE_GET:                //相册选图
                 if (resultCode == RESULT_OK) {
                     if (data != null) {
-                        String filePath = "";
-                        Uri originalUri = data.getData(); // 获得图片的uri
+                        filePath = "";
+//                        Uri originalUri = data.getData(); // 获得图片的uri
+                        Uri originalUri = data.getData();
+                        String type = data.getType();
+                        if (originalUri.toString().contains("com.miui.gallery.open")) {
+                            originalUri = PhotoClipperUtil.getImageContentUri(this,
+                                    new File(PhotoClipperUtil.getRealFilePath(this, originalUri)));
+                        }
+
                         if (originalUri != null) {
                             filePath = PhotoClipperUtil.getPath(this,originalUri);
+//                            filePath = headClipFile.getAbsolutePath();
+                            Log.i("now!",filePath.toString());
                            //这里可以用，因为是取相册里的图片，应该封装进了sqlite里面,这里搜索出来的是context开头的
                         }
 
                         if (filePath != null && filePath.length() > 0) {
 //                            Bitmap bitmap = BitmapFactory.decodeFile(filePath);
 //                            saveMyBitmap(headIconFile,bitmap);
-                            //保存过程，会不会添加到sqlite
-//                            clipperBigPic(this,getImageContentUri(this,headIconFile));
                             clipperBigPic(this,originalUri);
                         }
                     }
@@ -356,34 +346,35 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-/*
-    private void transBitmapToBytes(Bitmap bitmap) {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();//初始化一个流对象
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, output);//把bitmap100%高质量压缩 到 output对象里
-        result = output.toByteArray();//转换成功了  result就是一个bit的资源数组
-    }
-*/
+
 
     private void initHeadIconFile() {
-        headIconFile = new File(HEAD_ICON_DIC);
+//<<<<<<< master
+
+//=======
         headClipFile = new File(CLIP_ICON_DIC);
-        clipFileNameStr = headClipFile.getName().toString();
 
-
-        if(!headIconFile.exists()){
-            boolean mkdirs = headIconFile.mkdirs();//如果是第一次，那么创建文件夹，那么创建
-        }
         if(!headClipFile.exists()){
-            boolean mkdirs = headClipFile.mkdirs();
+            headClipFile.mkdirs();
         }
-        headIconFile = new File(HEAD_ICON_DIC,headFileNameStr);
-        headClipFile = new File(CLIP_ICON_DIC,clipFileNameStr);//创建裁剪文件
+        headClipFile = new File(CLIP_ICON_DIC,new Date().getTime() + ".png");//创建裁剪文件
+
+        if(!headClipFile.exists()){
+            try {
+                headClipFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        imagePath = headClipFile.getAbsolutePath();
+        Log.i("imagePath",filePath+"dddd");
     }
 
 
 
     private void imageCapture() {
         //拍照
+        createFile();       //创建文件夹存放图片
         Intent intent ;
 //        File pictureFile = headIconFile;
         //判断当前系统,获取文件headIconFile的Uri，就是原文件的uri
@@ -392,13 +383,13 @@ public class MainActivity extends AppCompatActivity {
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             pictureUri = FileProvider.getUriForFile(this,
-                    "com.example.ourapplication.fileprovider",headIconFile);
+                    "com.example.ourapplication.fileprovider",headClipFile);
         }else{
             intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            pictureUri = Uri.fromFile(headIconFile);
+            pictureUri = Uri.fromFile(headClipFile);
         }
         //去拍照
-        intent.putExtra(MediaStore.EXTRA_OUTPUT,pictureUri);//把拍照的普片存在headIconFile里面
+        intent.putExtra(MediaStore.EXTRA_OUTPUT,pictureUri);//把拍照的照片存在headIconFile里面
         startActivityForResult(intent,REQUEST_IMAGE_CAPTURE);
 
     }
@@ -416,6 +407,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Intent intent = new Intent("com.android.camera.action.CROP");
+//        outPutUri = PhotoClipperUtil.getImageContentUri(this,
+//                new File(PhotoClipperUtil.getRealFilePath(this, outPutUri)));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 
 //            String url = headIconFile.getAbsolutePath();
@@ -423,7 +416,10 @@ public class MainActivity extends AppCompatActivity {
             //这里不能从uri得到url，原因是getPath这个方法用cursor找的路径，而没有把路径添加到数据库里
             intent.setDataAndType(uri, IMAGE_TYPE);
             //裁剪后图片输出
-            outPutUri = getImageContentUri(this,headClipFile);
+
+//            outPutUri = PhotoClipperUtil.getUriFromFile(this,headClipFile);
+            outPutUri = PhotoClipperUtil.getImageContentUri(this,headClipFile);
+            Log.i("outputUri ",outPutUri.toString());
             //添加上输出的uri
             intent.putExtra(MediaStore.EXTRA_OUTPUT, outPutUri);
             intent.putExtra("noFaceDetection", false);//去除默认的人脸识别，否则和剪裁框重叠
@@ -433,17 +429,14 @@ public class MainActivity extends AppCompatActivity {
             intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
         }else{
-            if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-//                String url = PhotoClipperUtil.getPath(this, uri);//这个方法是处理4.4以上图片返回
-                // 的Uri对象不同的处理方法
-                String url = headIconFile.getAbsolutePath();
-                intent.setDataAndType(Uri.fromFile(new File(url)), IMAGE_TYPE);
-            } else {
-            intent.setDataAndType(uri, IMAGE_TYPE);
-            }
             //裁剪后图片输出
-            outPutUri = getImageContentUri(this,headClipFile);
+//            outPutUri = PhotoClipperUtil.getUriFromFile(this,headClipFile);
+            outPutUri = PhotoClipperUtil.getImageContentUri(this,headClipFile);
             intent.putExtra(MediaStore.EXTRA_OUTPUT, outPutUri);
+            Log.i(TAG,"abc " + outPutUri.getPath().toString());
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            //临时授权该Uri所代表的文件的写权限,不加入该flag将导致无法加载图片
+            intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         }
         //发送裁剪命令
         intent.putExtra("crop", true);
@@ -466,21 +459,6 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(intent, CLIP_PHOTO_BIG_REQUEST_CODE);
     }
 
-    private Uri getTempUri() {
-
-        return Uri.fromFile(getTempFile());//这个
-    }
-
-    private File getTempFile() {
-        String fileName = new Date().getTime()+".jpg";
-        File file = new File(HEAD_ICON_DIC, fileName);
-        try {
-            file.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return file;
-    }
 
     //***************************************************************************************
     @Override
@@ -506,33 +484,50 @@ public class MainActivity extends AppCompatActivity {
 
     private void initRecommand() {
 
-        picSet recommend1 = new picSet(R.drawable.u16,"系统推荐");
-        mRecommandList.add(recommend1);
+        mRecmdList.clear();
+        imageUriSet recommend1 = new imageUriSet(getUriFromDrawableRes(R.drawable.u16));
+        recommend1.setImageParam("系统推荐");
+        mRecmdList.add(recommend1);
+//        Log.i(TAG,"推荐图片uri "+recommend1.getImageUri().toString());
 
-        picSet recommend2 = new picSet(R.drawable.u17,"系统推荐");
-        mRecommandList.add(recommend2);
+        imageUriSet recommend2 = new imageUriSet(getUriFromDrawableRes(R.drawable.u17));
+        recommend2.setImageParam("系统推荐");
+        mRecmdList.add(recommend2);
 
-        picSet recommend3 = new picSet(R.drawable.u18,"系统推荐");
-        mRecommandList.add(recommend3);
+        imageUriSet recommend3 = new imageUriSet(getUriFromDrawableRes(R.drawable.u18));
+        recommend3.setImageParam("系统推荐");
+        mRecmdList.add(recommend3);
 
-        picSet recommend4 = new picSet(R.drawable.u2,"系统推荐");
-        mRecommandList.add(recommend4);
+        imageUriSet recommend4 = new imageUriSet(getUriFromDrawableRes(R.drawable.u2));
+        recommend4.setImageParam("系统推荐");
+        mRecmdList.add(recommend4);
 
-        picSet recommend5 = new picSet(R.drawable.u1,"系统推荐");
-        mRecommandList.add(recommend5);
+        imageUriSet recommend5 = new imageUriSet(getUriFromDrawableRes(R.drawable.u1));
+        recommend5.setImageParam("系统推荐");
+        mRecmdList.add(recommend5);
 
-        picSet recommend6 = new picSet(R.drawable.u3,"系统推荐");
-        mRecommandList.add(recommend6);
+        imageUriSet recommend6 = new imageUriSet(getUriFromDrawableRes(R.drawable.u3));
+        recommend6.setImageParam("系统推荐");
+        mRecmdList.add(recommend6);
 
-        picSet recommend7 = new picSet(R.drawable.u5,"系统推荐");
-        mRecommandList.add(recommend7);
+        imageUriSet recommend7 = new imageUriSet(getUriFromDrawableRes(R.drawable.u5));
+        recommend7.setImageParam("系统推荐");
+        mRecmdList.add(recommend7);
 
-        picSet recommend8 = new picSet(R.drawable.u4,"系统推荐");
-        mRecommandList.add(recommend8);
+        imageUriSet recommend8 = new imageUriSet(getUriFromDrawableRes(R.drawable.u4));
+        recommend8.setImageParam("系统推荐");
+        mRecmdList.add(recommend8);
 
         //可以在首页展示历史记录
+    }
 
-
+    public Uri getUriFromDrawableRes(int id) {
+        Resources resources=(Resources)getBaseContext().getResources();
+        String path = ContentResolver.SCHEME_ANDROID_RESOURCE + "://"
+                + resources.getResourcePackageName(id) + "/"
+                + resources.getResourceTypeName(id) + "/"
+                + resources.getResourceEntryName(id);
+        return Uri.parse(path);
     }
     //**************************************************************************************
 }

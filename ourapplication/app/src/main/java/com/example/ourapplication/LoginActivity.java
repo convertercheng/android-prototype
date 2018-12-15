@@ -54,6 +54,8 @@ public class LoginActivity extends AppCompatActivity  {
     BufferedReader bufferReader;
     private EditText account;
     private EditText password;
+    public static String userName;
+    public static String pasword;
     private Button register;
     private Handler handler=new Handler(){
         public void handleMessage(android.os.Message msg){
@@ -87,6 +89,8 @@ public class LoginActivity extends AppCompatActivity  {
     public void login(View view){
         final String qq=account.getText().toString().trim();
         final String pwd=password.getText().toString().trim();
+        userName = qq;
+        pasword = pwd;
         if(TextUtils.isEmpty(qq)){
             Toast.makeText(this,"用户名为空登录失败", Toast.LENGTH_SHORT).show();
             return;
